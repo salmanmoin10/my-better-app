@@ -1,0 +1,48 @@
+name: Build and Deploy to Kubernetes
+on:
+  push:
+    branches: [ main ]
+env:
+  DOCKER_IMAGE_NAME: moinsalman/my-monitored-app # Replace with your Docker Hub repo
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+ - name: Login to Docker Hub
+    uses: docker/login-action@v3
+    with:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  - name: Build and push Docker image
+    uses: docker/build-push-action@v5
+    with:
+      context: .
+      push: true
+      tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+
+​
+deploy:
+    name: Deploy to Kubernetes
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+ - name: Set up kubectl
+    uses: azure/k8s-set-context@v4
+    with:
+      method: kubeconfig
+      kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+  - name: Deploy to Kubernetes
+    run: |
+      # Update the image tag in the deployment manifest
+      sed -i 's|image:.*|image: ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}|' kubernetes/deployment.yaml
+
+      # Apply the Kubernetes manifests
+      kubectl apply -f kubernetes/deployment.yaml
+      kubectl apply -f kubernetes/service.yaml
