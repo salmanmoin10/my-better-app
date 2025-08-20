@@ -30,11 +30,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Debug Kuberconfig Content
+      - name: 🔬 Validate Kubeconfig Format
         run: |
-          echo "--- KUBE_CONFIG SECRET CONTENT START ---"
-          echo "${{ secrets.KUBE_CONFIG }}"
-          echo "--- KUBE_CONFIG SECRET CONTENT END ---"
+          echo "${{ secrets.KUBE_CONFIG }}" > temp_kubeconfig.yaml
+          kubectl config view --kubeconfig=temp_kubeconfig.yaml
+          echo "✅ Kubeconfig format is valid."
       - name: Set up kubectl
         uses: azure/k8s-set-context@v4
         with:
