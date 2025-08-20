@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-app-servicemonitor
+  namespace: monitoring # IMPORTANT: Must be in the same namespace as Prometheus
+  labels:
+    # This label connects it to the Prometheus instance deployed by the Helm chart
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  namespaceSelector:
+    matchNames:
+    - default # Assuming your app is deployed to the 'default' namespace
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
